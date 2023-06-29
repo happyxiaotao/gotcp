@@ -11,30 +11,36 @@ import (
 	"tttt/gotcp"
 )
 
-type Server struct {
-	addr string
+type Handler struct {
+	server gotcp.Server
 }
 
-func (s *Server) OnStart(session gotcp.Session) error {
+func (s *Handler) OnStart(session gotcp.Session) error {
 	log.Printf("OnStart,sessionId:%v", session.SessionId())
 	return nil
 }
 
-func (s *Server) OnData(session gotcp.Session, data []byte) error {
+func (s *Handler) OnData(session gotcp.Session, data []byte) error {
 	log.Printf("OnData,sessionId:%v,data:%s", session.SessionId(), string(data))
+
+	if session.SessionId() == gotcp.SessionId(2) {
+		s.server.Stop()
+	}
 	return nil
 }
-func (s *Server) OnClose(session gotcp.Session) {
+func (s *Handler) OnClose(session gotcp.Session) {
 	log.Printf("OnClose,sessionId:%v", session.SessionId())
 }
 
 func main() {
-	server := Server{
-		addr: "127.0.0.1:9991",
-	}
-	log.Printf("listen addr:%v", server.addr)
-	err := gotcp.Run(&server, server.addr)
+	var handler Handler
+	var address = "127.0.0.1:9991"
+	server := gotcp.NewServer(&handler, address)
+	handler.server = server
+	log.Printf("listen addr:%v", address)
+	err := server.Run()
 	log.Printf("Run err:%v", err)
 }
+
 
 ```
